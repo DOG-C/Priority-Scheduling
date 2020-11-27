@@ -115,6 +115,9 @@ int _dequeue(Queue *queue)
 
 void initScheduler()
 {
+    for (int i = 0; i < HIGHEST_PRIORITY; i++) {
+        _queues[i]->next = NULL;
+    }
 }
 
 /*
