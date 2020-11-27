@@ -49,7 +49,7 @@ typedef struct _Process {
 } Process;
 
 Process _processes[MAX_PROCESSES] = {{0}};
-Queue priority_queues[HIGHEST_PRIORITY] = malloc(sizeof(Queue) * HIGHEST_PRIORITY);
+Queue _queues[HIGHEST_PRIORITY] = malloc(sizeof(Queue) * HIGHEST_PRIORITY);
 
 /* TODO: Add global variables if needed. */
 
@@ -122,25 +122,28 @@ void initScheduler()
  */
 void onProcessReady(int processId)
 {
-    assert(_processes[processId].state == ProcessState.STATE_READY);
+    assert(_processes[processId].state == ProcessState.STATE_WAITING);
 
     switch(_processes[processId].priority) {
         case 1:
-            _enqueue(queue[0], processId);
+            _enqueue(_queues[0], processId);
             break;
         case 2:
-            _enqueue(queue[1], processId);
+            _enqueue(_queues[1], processId);
             break;
         case 3:
-            _enqueue(queue[2], processId);
+            _enqueue(_queues[2], processId);
             break;
         case 4:
-            _enqueue(queue[3], processId);
+            _enqueue(_queues[3], processId);
             break;
         case 5:
-            _enqueue(queue[4], processId);
+            _enqueue(_queues[4], processId);
             break;
+        default: exit(0);
     }
+
+    _processes[processId].state = ProcessState.STATE_READY;
 }
 
 /*
@@ -149,9 +152,10 @@ void onProcessReady(int processId)
  */
 void onProcessPreempted(int processId)
 {
-    (void)processId;
-
-    // TODO: Implement
+    if (_processes[processId].state == ProcessState.STATE_READY ||
+        _processes[processId].state == ProcessState.STATE_RUNNING) {
+        _processes[processId].state = ProcessState.STATE_RUNNING;
+    }
 }
 
 /*
@@ -160,9 +164,9 @@ void onProcessPreempted(int processId)
  */
 void onProcessBlocked(int processId)
 {
-    (void)processId;
-
-    // TODO: Implement
+    if (_processes[processId].state == ProcessState.STATE_RUNNING) {
+        _processes[processId].state = ProcessState.STATE_WAITING;
+    }
 }
 
 /*
