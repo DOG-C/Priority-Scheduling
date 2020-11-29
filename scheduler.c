@@ -143,6 +143,7 @@ void onProcessPreempted(int processId)
     
     _processes[processId].state = STATE_RUNNING;
     cur_pid = processId;
+    counter ++;
 }
 
 /*
@@ -164,6 +165,7 @@ int scheduleNextProcess()
 {
     int compare_pid = -1;
     int compare_prio = -1;
+
     for (int i = 5; i >= 0; i--) {
         if (_queues[i].head != NULL) {
             if (cur_pid >= 0) {
@@ -179,15 +181,18 @@ int scheduleNextProcess()
         }
     }
 
-    if (_processes[cur_pid].priority >= compare_prio) {
-        counter++;
-        if (counter <= 5){
+    if (_processes[cur_pid].priority > compare_prio) {
+        if (counter >= 5){
+            _processes[cur_pid].priority --;
+            counter = 0;
+            return scheduleNextProcess();
+        } else {
             return cur_pid;
         }
     } else {
+        _enqueue(&_queues[_processes[cur_pid].priority], cur_pid);
         cur_pid = compare_pid;
         _processes[cur_pid].state = STATE_RUNNING;
-
         counter = 0;
         return _dequeue(&_queues[compare_prio]);
     }
