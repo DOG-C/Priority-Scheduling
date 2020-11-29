@@ -154,8 +154,7 @@ void onProcessBlocked(int processId)
     assert(_processes[processId].state == STATE_RUNNING);
     
     _processes[processId].state = STATE_WAITING;
-    _dequeue(&_queues[_processes[processId].priority]);
-
+    cur_pid = -1;
 }
 
 /*
@@ -164,19 +163,33 @@ void onProcessBlocked(int processId)
 int scheduleNextProcess()
 {
     int compare_pid = -1;
-    for (int i = 5; i >0; i--) {
+    int compare_prio = -1;
+    for (int i = 5; i >= 0; i--) {
         if (_queues[i].head != NULL) {
-            compare_pid = i;
-            break;
+            if (cur_pid >= 0) {
+                compare_pid = _queues[i].head->data;
+                compare_prio = i;
+                break;
+            } else {
+                cur_pid = _queues[i].head->data;
+                _processes[cur_pid].state = STATE_RUNNING;
+                counter = 0;
+                return _dequeue(&_queues[i]);
+            }
         }
     }
 
-    if (_processes[cur_pid].priority >= _processes[compare_pid].priority) {
-        return cur_pid;
+    if (_processes[cur_pid].priority >= compare_prio) {
+        counter++;
+        if (counter <= 5){
+            return cur_pid;
+        }
     } else {
-        cur_pid = _queues[compare_pid].head->data;
-        _processes[_queues[compare_pid].head->data].state = STATE_RUNNING;
-        return _dequeue(&_queues[compare_pid]);
+        cur_pid = compare_pid;
+        _processes[cur_pid].state = STATE_RUNNING;
+
+        counter = 0;
+        return _dequeue(&_queues[compare_prio]);
     }
 
     return -1;
