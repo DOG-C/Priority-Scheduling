@@ -161,6 +161,12 @@ void onProcessBlocked(int processId)
  */
 int scheduleNextProcess()
 {
-    
+    for (int i = 5; i >0; i--) {
+        if (_queues[i].head != NULL) {
+            _processes[_queues[i].tail->data].state = STATE_RUNNING;
+            return _dequeue(&_queues[i]);
+        }
+    }
+
     return -1;
 }
