@@ -51,6 +51,7 @@ typedef struct _Process {
 Process _processes[MAX_PROCESSES] = {{0}};
 Queue _queues[6];
 int counter = 0;
+int cur_pid = -1;
 
 /* TODO: Add global variables if needed. */
 
@@ -141,7 +142,7 @@ void onProcessPreempted(int processId)
         _processes[processId].state == STATE_RUNNING);
     
     _processes[processId].state = STATE_RUNNING;
-    _dequeue(&_queues[_processes[processId].priority]);
+    cur_pid = processId;
 }
 
 /*
@@ -154,6 +155,7 @@ void onProcessBlocked(int processId)
     
     _processes[processId].state = STATE_WAITING;
     _dequeue(&_queues[_processes[processId].priority]);
+
 }
 
 /*
@@ -161,11 +163,20 @@ void onProcessBlocked(int processId)
  */
 int scheduleNextProcess()
 {
+    int compare_pid = -1;
     for (int i = 5; i >0; i--) {
         if (_queues[i].head != NULL) {
-            _processes[_queues[i].tail->data].state = STATE_RUNNING;
-            return _dequeue(&_queues[i]);
+            compare_pid = i;
+            break;
         }
+    }
+
+    if (_processes[cur_pid].priority >= _processes[compare_pid].priority) {
+        return cur_pid;
+    } else {
+        cur_pid = _queues[compare_pid].head->data;
+        _processes[_queues[compare_pid].head->data].state = STATE_RUNNING;
+        return _dequeue(&_queues[compare_pid]);
     }
 
     return -1;
