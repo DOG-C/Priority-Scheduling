@@ -49,7 +49,8 @@ typedef struct _Process {
 } Process;
 
 Process _processes[MAX_PROCESSES] = {{0}};
-Queue _queues[HIGHEST_PRIORITY] = malloc(sizeof(Queue) * HIGHEST_PRIORITY);
+Queue _queues[6];
+int counter = 0;
 
 /* TODO: Add global variables if needed. */
 
@@ -115,8 +116,8 @@ int _dequeue(Queue *queue)
 
 void initScheduler()
 {
-    for (int i = 0; i < HIGHEST_PRIORITY; i++) {
-        _queues[i]->next = NULL;
+    for (int i = 0; i <= HIGHEST_PRIORITY; i++) {
+        _queues[i].head = NULL;
     }
 }
 
@@ -125,28 +126,9 @@ void initScheduler()
  */
 void onProcessReady(int processId)
 {
-    assert(_processes[processId].state == ProcessState.STATE_WAITING);
-
-    switch(_processes[processId].priority) {
-        case 1:
-            _enqueue(_queues[0], processId);
-            break;
-        case 2:
-            _enqueue(_queues[1], processId);
-            break;
-        case 3:
-            _enqueue(_queues[2], processId);
-            break;
-        case 4:
-            _enqueue(_queues[3], processId);
-            break;
-        case 5:
-            _enqueue(_queues[4], processId);
-            break;
-        default: exit(0);
-    }
-
-    _processes[processId].state = ProcessState.STATE_READY;
+    assert(_processes[processId].state == STATE_WAITING);
+    _processes[processId].state = STATE_READY;
+    _enqueue(&_queues[_processes[processId].priority], processId);
 }
 
 /*
@@ -155,10 +137,11 @@ void onProcessReady(int processId)
  */
 void onProcessPreempted(int processId)
 {
-    if (_processes[processId].state == ProcessState.STATE_READY ||
-        _processes[processId].state == ProcessState.STATE_RUNNING) {
-        _processes[processId].state = ProcessState.STATE_RUNNING;
-    }
+    assert(_processes[processId].state == STATE_READY ||
+        _processes[processId].state == STATE_RUNNING);
+    
+    _processes[processId].state = STATE_RUNNING;
+    _dequeue(&_queues[_processes[processId].priority]);
 }
 
 /*
@@ -167,9 +150,10 @@ void onProcessPreempted(int processId)
  */
 void onProcessBlocked(int processId)
 {
-    if (_processes[processId].state == ProcessState.STATE_RUNNING) {
-        _processes[processId].state = ProcessState.STATE_WAITING;
-    }
+    assert(_processes[processId].state == STATE_RUNNING);
+    
+    _processes[processId].state = STATE_WAITING;
+    _dequeue(&_queues[_processes[processId].priority]);
 }
 
 /*
@@ -177,6 +161,6 @@ void onProcessBlocked(int processId)
  */
 int scheduleNextProcess()
 {
-    // TODO: Implement
+    
     return -1;
 }
